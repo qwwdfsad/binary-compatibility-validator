@@ -82,6 +82,13 @@ apiValidation {
      * Flag to programmatically disable compatibility validator
      */
     validationDisabled = true
+
+    /**
+     * Manually set compilation name which should be checked.
+     * Typically this can be used for multi-flavor builds with multiple targets, where you want check different
+     * one that common default.
+     */
+    checkedCompilation = "releaseInternal"
 }
 ```
 
@@ -116,6 +123,13 @@ configure<kotlinx.validation.ApiValidationExtension> {
      * Flag to programmatically disable compatibility validator
      */
     validationDisabled = false
+
+    /**
+     * Manually set compilation name which should be checked.
+     * Typically this can be used for multi-flavor builds with multiple targets, where you want check different
+     * one that common default.
+     */
+    checkedCompilation = "releaseInternal"
 }
 ```
 

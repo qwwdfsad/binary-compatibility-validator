@@ -34,4 +34,13 @@ open class ApiValidationExtension {
      * Example of such a class could be `com.package.android.BuildConfig`.
      */
     public var ignoredClasses: MutableSet<String> = HashSet()
+
+    /**
+     * Name of kotlin compilation target which should be checked.
+     * Example of such target for android could be `releaseBackendProductionVanilla`.
+     *
+     * If left empty default target compilation will be used.
+     */
+    public var checkedCompilation: String? = null
+
 }

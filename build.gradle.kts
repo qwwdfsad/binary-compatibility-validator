@@ -14,6 +14,7 @@ repositories {
     mavenCentral()
     jcenter()
     gradlePluginPortal()
+    google()
 }
 
 sourceSets {
@@ -49,6 +50,7 @@ dependencies {
     implementation("org.ow2.asm:asm-tree:6.0")
     implementation("com.googlecode.java-diff-utils:diffutils:1.3.0")
     compileOnly("org.jetbrains.kotlin.multiplatform:org.jetbrains.kotlin.multiplatform.gradle.plugin:1.3.61")
+    compileOnly("com.android.tools.build:gradle:4.1.1")
     testImplementation(kotlin("test-junit"))
 
     "functionalTestImplementation"("org.assertj:assertj-core:3.18.1")

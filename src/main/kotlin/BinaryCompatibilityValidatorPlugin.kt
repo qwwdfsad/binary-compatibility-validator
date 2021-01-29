@@ -11,6 +11,7 @@ import org.gradle.api.tasks.*
 import org.jetbrains.kotlin.gradle.dsl.*
 import org.jetbrains.kotlin.gradle.plugin.*
 import java.io.*
+import com.android.build.gradle.BaseExtension as AndroidBaseExtension
 
 const val API_DIR = "api"
 
@@ -48,8 +49,9 @@ class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
         project.pluginManager.withPlugin("kotlin-android") {
             if (project.name in project.rootProject.ignoredProjects()) return@withPlugin
             val extension = project.extensions.getByName("kotlin") as KotlinAndroidProjectExtension
+            val compilation = project.targetedCompilation(extension.target.platformType)
             extension.target.compilations.matching {
-                it.compilationName == "release"
+                it.compilationName == compilation
             }.all {
                 project.configureKotlinCompilation(it, useOutput = true)
             }
@@ -61,17 +63,24 @@ class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
             kotlin.targets.matching {
                 it.platformType == KotlinPlatformType.jvm || it.platformType == KotlinPlatformType.androidJvm
             }.all { target ->
-                if (target.platformType == KotlinPlatformType.jvm) {
-                    target.compilations.matching { it.name == "main" }.all {
-                        project.configureKotlinCompilation(it)
-                    }
-                } else if (target.platformType == KotlinPlatformType.androidJvm) {
-                    target.compilations.matching { it.name == "release" }.all {
-                        project.configureKotlinCompilation(it, useOutput = true)
-                    }
+                val useOutput = target.platformType == KotlinPlatformType.androidJvm
+                val compilation = project.targetedCompilation(target.platformType)
+                target.compilations.matching {
+                    it.name == compilation
+                }.all {
+                    project.configureKotlinCompilation(it, useOutput = useOutput)
                 }
             }
         }
+    }
+}
+
+private fun Project.targetedCompilation(platformType: KotlinPlatformType): String {
+    val checkedCompilation =
+        (rootProject.extensions.getByType(ApiValidationExtension::class.java) as ApiValidationExtension).checkedCompilation
+    return checkedCompilation ?: when (platformType) {
+        KotlinPlatformType.androidJvm -> project.extensions.getByType(AndroidBaseExtension::class.java).defaultPublishConfig
+        else -> "main"
     }
 }
 
