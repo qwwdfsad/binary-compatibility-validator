@@ -9,7 +9,7 @@ import kotlinx.validation.api.*
 import kotlinx.validation.api.BaseKotlinGradleTest
 import org.junit.*
 
-class MultipleJvmTargetsTest : BaseKotlinGradleTest() {
+internal class MultipleJvmTargetsTest : BaseKotlinGradleTest() {
     private fun BaseKotlinScope.createProjectHierarchyWithPluginOnRoot() {
         settingsGradleKts {
             resolve("examples/gradle/settings/settings-name-testproject.gradle.kts")
