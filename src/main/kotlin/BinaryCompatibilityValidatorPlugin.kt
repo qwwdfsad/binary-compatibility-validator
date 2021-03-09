@@ -58,21 +58,78 @@ class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
         project.pluginManager.withPlugin("kotlin-multiplatform") {
             if (project.name in extension.ignoredProjects) return@withPlugin
             val kotlin = project.extensions.getByName("kotlin") as KotlinMultiplatformExtension
-            kotlin.targets.matching {
-                it.platformType == KotlinPlatformType.jvm || it.platformType == KotlinPlatformType.androidJvm
-            }.all { target ->
-                if (target.platformType == KotlinPlatformType.jvm) {
-                    target.compilations.matching { it.name == "main" }.all {
+            val numberOfJvmCompilation =  multiplatformJvmCompilations(kotlin).count()
+
+            if (numberOfJvmCompilation <= 1) {
+                multiplatformJvmCompilations(kotlin).all { target ->
+                    target.doForCompilations("main", KotlinPlatformType.jvm) {
                         project.configureKotlinCompilation(it, extension)
                     }
+
+                    target.doForCompilations("release", KotlinPlatformType.androidJvm) {
+                        project.project.configureKotlinCompilation(it, extension, useOutput = true)
+                    }
+                }
+                return@withPlugin
+            }
+
+            multiplatformJvmCompilations(kotlin).all { target ->
+                if (target.platformType == KotlinPlatformType.jvm) {
+                    target.doForCompilations("main", KotlinPlatformType.jvm) {
+                        project.configureMultipleKotlinCompilations(target, it, extension)
+                    }
+
                 } else if (target.platformType == KotlinPlatformType.androidJvm) {
-                    target.compilations.matching { it.name == "release" }.all {
-                        project.configureKotlinCompilation(it, extension, useOutput = true)
+                    target.doForCompilations("release", KotlinPlatformType.androidJvm) {
+                        project.configureMultipleKotlinCompilations(target, it, extension, useOutput = true)
                     }
                 }
             }
         }
     }
+
+    private fun KotlinTarget.doForCompilations(
+        name: String,
+        type: KotlinPlatformType,
+        block: (KotlinCompilation<KotlinCommonOptions>) -> Unit
+    ) {
+        if (platformType != type) return
+        compilations.matching { it.name == name }.all { block(it) }
+    }
+
+    private fun multiplatformJvmCompilations(kotlin: KotlinMultiplatformExtension) =
+        kotlin.targets.matching {
+            it.platformType == KotlinPlatformType.jvm || it.platformType == KotlinPlatformType.androidJvm
+        }
+}
+
+private fun Project.configureMultipleKotlinCompilations(
+    target: KotlinTarget,
+    compilation: KotlinCompilation<KotlinCommonOptions>,
+    extension: ApiValidationExtension,
+    useOutput: Boolean = false
+) {
+    val projectName = project.name
+    val targetName = target.name
+    val apiBuildDir = file(buildDir.resolve(API_DIR).resolve(targetName))
+    val apiBuild = task<KotlinApiBuildTask>("${targetName}ApiBuild", extension) {
+        // Do not enable task for empty umbrella modules
+        isEnabled = apiCheckEnabled(extension) && compilation.allKotlinSourceSets.any { it.kotlin.srcDirs.any { it.exists() } }
+        // 'group' is not specified deliberately so it will be hidden from ./gradlew tasks
+        description =
+            "Builds Kotlin API for 'main' compilations of $projectName for target $targetName. Complementary task and shouldn't be called manually"
+
+        if (useOutput) {
+            // Workaround for #4
+            inputClassesDirs = files(provider<Any> { if (isEnabled) compilation.output.classesDirs else emptyList<Any>() })
+            inputDependencies = files(provider<Any> { if (isEnabled) compilation.output.classesDirs else emptyList<Any>() })
+        } else {
+            inputClassesDirs = files(provider<Any> { if (isEnabled) compilation.output.classesDirs else emptyList<Any>() })
+            inputDependencies = files(provider<Any> { if (isEnabled) compilation.compileDependencyFiles else emptyList<Any>() })
+        }
+        outputApiDir = apiBuildDir
+    }
+    configureCheckTasks(apiBuildDir, apiBuild, extension)
 }
 
 private fun Project.configureKotlinCompilation(
