@@ -12,13 +12,13 @@ import kotlin.test.fail
 
 private val OVERWRITE_EXPECTED_OUTPUT = System.getProperty("overwrite.output")?.toBoolean() ?: false // use -Doverwrite.output=true
 
-fun List<ClassBinarySignature>.dumpAndCompareWith(to: File) {
+fun List<ClassBinarySignature>.dumpAndCompareWith(to: File, annotateNullability: Boolean) {
     if (!to.exists()) {
         to.parentFile?.mkdirs()
-        to.bufferedWriter().use { dump(to = it) }
+        to.bufferedWriter().use { dump(to = it, annotateNullability = annotateNullability) }
         fail("Expected data file did not exist. Generating: $to")
     } else {
-        val actual = dump(to = StringBuilder())
+        val actual = dump(to = StringBuilder(), annotateNullability = annotateNullability)
         assertEqualsToFile(to, actual)
     }
 }

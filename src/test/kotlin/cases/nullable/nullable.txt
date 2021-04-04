@@ -1,0 +1,37 @@
+public abstract interface class cases/nullable/Nullable {
+	public abstract fun getBasicType ()Ljava/lang/Integer?;
+	public abstract fun getObjectType ()Ljava/lang/String?;
+	public abstract fun operation (Ljava/lang/Integer?;)Ljava/lang/String?;
+	public abstract fun setBasicType (Ljava/lang/Integer?;)V
+	public abstract fun setObjectType (Ljava/lang/String?;)V
+}
+
+public final class cases/nullable/NullableLambda {
+	public fun <init> ()V
+	public final fun allOptional (Lkotlin/jvm/functions/Function1?;)V
+	public final fun intToInt (Lkotlin/jvm/functions/Function1;)V
+	public final fun intToUnit (Lkotlin/jvm/functions/Function1;)V
+}
+
+public final class cases/nullable/NullableParameters {
+	public fun <init> ()V
+	public final fun objectType (Ljava/lang/String;Ljava/lang/String?;)V
+	public final fun optionalFirst (Ljava/lang/Integer?;I)V
+	public final fun optionalFirstAndLast (Ljava/lang/Integer?;ILjava/lang/Integer?;)V
+	public final fun optionalSecond (ILjava/lang/Integer?;)V
+}
+
+public final class cases/nullable/NullableProperties {
+	public fun <init> ()V
+	public final fun getBasicType ()Ljava/lang/Integer?;
+	public final fun getObjectType ()Ljava/lang/String?;
+	public final fun setBasicType (Ljava/lang/Integer?;)V
+	public final fun setObjectType (Ljava/lang/String?;)V
+}
+
+public final class cases/nullable/NullableReturnType {
+	public fun <init> ()V
+	public final fun returnBasicType ()Ljava/lang/Integer?;
+	public final fun returnObjectType ()Ljava/lang/String?;
+}
+

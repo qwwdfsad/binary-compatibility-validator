@@ -40,6 +40,8 @@ class CasesPublicAPITest {
 
     @Test fun nestedClasses() { snapshotAPIAndCompare(testName.methodName) }
 
+    @Test fun nullable() { snapshotAPIAndCompare(testName.methodName, annotateNullability = true) }
+
     @Test fun private() { snapshotAPIAndCompare(testName.methodName) }
 
     @Test fun protected() { snapshotAPIAndCompare(testName.methodName) }
@@ -50,7 +52,7 @@ class CasesPublicAPITest {
 
     @Test fun whenMappings() { snapshotAPIAndCompare(testName.methodName) }
 
-    private fun snapshotAPIAndCompare(testClassRelativePath: String) {
+    private fun snapshotAPIAndCompare(testClassRelativePath: String, annotateNullability: Boolean = false) {
         val testClassPaths = baseClassPaths.map { it.resolve(testClassRelativePath) }
         val testClasses = testClassPaths.flatMap { it.listFiles().orEmpty().asIterable() }
         check(testClasses.isNotEmpty()) { "No class files are found in paths: $testClassPaths" }
@@ -58,6 +60,6 @@ class CasesPublicAPITest {
         val testClassStreams = testClasses.asSequence().filter { it.name.endsWith(".class") }.map { it.inputStream() }
         val api = testClassStreams.loadApiFromJvmClasses().filterOutNonPublic()
         val target = baseOutputPath.resolve(testClassRelativePath).resolve(testName.methodName + ".txt")
-        api.dumpAndCompareWith(target)
+        api.dumpAndCompareWith(target, annotateNullability)
     }
 }

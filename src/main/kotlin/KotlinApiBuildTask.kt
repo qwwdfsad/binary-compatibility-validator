@@ -36,6 +36,9 @@ open class KotlinApiBuildTask @Inject constructor(
     @get:Input
     val ignoredClasses : Set<String> get() = extension.ignoredClasses
 
+    @get:Input
+    val annotateNullability : Boolean get() = extension.annotateNullability
+
     @TaskAction
     fun generate() {
         cleanup(outputApiDir)
@@ -57,7 +60,7 @@ open class KotlinApiBuildTask @Inject constructor(
                     writer.append(api.signature).appendln(" {")
                     api.memberSignatures
                         .sortedWith(MEMBER_SORT_ORDER)
-                        .forEach { writer.append("\t").appendln(it.signature) }
+                        .forEach { writer.append("\t").appendln(it.signature(annotateNullability)) }
                     writer.appendln("}\n")
                 }
         }

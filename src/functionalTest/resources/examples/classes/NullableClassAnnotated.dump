@@ -1,0 +1,6 @@
+public final class com/company/nullable/NullableClass {
+	public fun <init> ()V
+	public final fun f (Ljava/lang/String?;)Ljava/lang/Integer?;
+	public final fun getP ()Ljava/lang/Integer?;
+}
+

@@ -13,6 +13,13 @@ open class ApiValidationExtension {
     public var validationDisabled = false
 
     /**
+     * Enable nullability annotations.
+     *
+     * Effectively appending `?` to nullable Types.
+     */
+    public var annotateNullability = false
+
+    /**
      * Fully qualified package names that are not consider public API.
      * For example, it could be `kotlinx.coroutines.internal` or `kotlinx.serialization.implementation`.
      */

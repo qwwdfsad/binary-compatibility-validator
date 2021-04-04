@@ -129,16 +129,16 @@ public fun List<ClassBinarySignature>.filterOutNonPublic(nonPublicPackages: Coll
 }
 
 @ExternalApi
-public fun List<ClassBinarySignature>.dump() = dump(to = System.out)
+public fun List<ClassBinarySignature>.dump() = dump(to = System.out, annotateNullability = false)
 
 @ExternalApi
-public fun <T : Appendable> List<ClassBinarySignature>.dump(to: T): T {
+public fun <T : Appendable> List<ClassBinarySignature>.dump(to: T, annotateNullability: Boolean): T {
     forEach { classApi ->
         with(to) {
             append(classApi.signature).appendln(" {")
             classApi.memberSignatures
                     .sortedWith(MEMBER_SORT_ORDER)
-                    .forEach { append("\t").appendln(it.signature) }
+                    .forEach { append("\t").appendln(it.signature(annotateNullability)) }
             appendln("}\n")
         }
     }
