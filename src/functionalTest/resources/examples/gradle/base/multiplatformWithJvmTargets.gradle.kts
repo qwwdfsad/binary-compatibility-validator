@@ -4,12 +4,12 @@
  */
 
 plugins {
-    kotlin("multiplatform") version "1.4.31"
+    kotlin("multiplatform") version "1.5.20"
+    id("org.jetbrains.kotlinx.binary-compatibility-validator")
 }
 
 repositories {
     mavenCentral()
-    id("org.jetbrains.kotlinx.binary-compatibility-validator")
 }
 
 kotlin {
@@ -33,6 +33,7 @@ kotlin {
         val commonMain by getting
         val commonTest by getting {
             dependencies {
+                implementation(kotlin("stdlib"))
                 implementation(kotlin("test-common"))
                 implementation(kotlin("test-annotations-common"))
             }
@@ -40,11 +41,12 @@ kotlin {
         val jvmMain by getting
         val jvmTest by getting {
             dependencies {
+                implementation(kotlin("stdlib"))
                 implementation(kotlin("test-junit"))
             }
         }
-        val jvmFooMain by getting
-        val jvmFooTest by getting {
+        val anotherJvmMain by getting
+        val anotherJvmTest by getting {
             dependencies {
                 implementation(kotlin("test-junit"))
             }

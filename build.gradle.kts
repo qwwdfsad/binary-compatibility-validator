@@ -36,6 +36,17 @@ tasks.register<Test>("functionalTest") {
 }
 tasks.check { dependsOn(tasks["functionalTest"]) }
 
+val createClasspathManifest = tasks.register("createClasspathManifest") {
+    val outputDir = buildDir.resolve("cpManifests")
+    inputs.files(configurations["testRuntimeClasspath"])
+    outputs.dir(outputDir)
+
+    doLast {
+        outputDir.mkdirs()
+        file(outputDir.resolve("plugin-classpath.txt")).writeText(configurations.testRuntimeClasspath.get().joinToString("\n"))
+    }
+}
+
 dependencies {
     implementation(gradleApi())
     implementation("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.2.0")
@@ -43,7 +54,9 @@ dependencies {
     implementation("org.ow2.asm:asm-tree:9.0")
     implementation("com.googlecode.java-diff-utils:diffutils:1.3.0")
     compileOnly("org.jetbrains.kotlin.multiplatform:org.jetbrains.kotlin.multiplatform.gradle.plugin:1.3.61")
+    testRuntimeOnly("org.jetbrains.kotlin.multiplatform:org.jetbrains.kotlin.multiplatform.gradle.plugin:1.5.20")
     testImplementation(kotlin("test-junit"))
+    "functionalTestImplementation"(files(createClasspathManifest))
 
     "functionalTestImplementation"("org.assertj:assertj-core:3.18.1")
     "functionalTestImplementation"(gradleTestKit())

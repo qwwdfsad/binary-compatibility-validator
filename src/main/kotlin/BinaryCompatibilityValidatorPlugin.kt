@@ -11,6 +11,7 @@ import org.gradle.api.tasks.*
 import org.jetbrains.kotlin.gradle.dsl.*
 import org.jetbrains.kotlin.gradle.plugin.*
 import java.io.*
+import java.net.URLClassLoader
 
 const val API_DIR = "api"
 
@@ -58,34 +59,21 @@ class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
         project.pluginManager.withPlugin("kotlin-multiplatform") {
             if (project.name in extension.ignoredProjects) return@withPlugin
             val kotlin = project.extensions.getByName("kotlin") as KotlinMultiplatformExtension
-            val numberOfJvmCompilations =  multiplatformJvmCompilations(kotlin).count()
-
-            multiplatformJvmCompilations(kotlin).all { target ->
-                val t = if (numberOfJvmCompilations <= 1) null else target
-                target.doForCompilations("main", KotlinPlatformType.jvm) {
-                    project.configureKotlinCompilation(it, extension, t)
-                }
-
-                target.doForCompilations("release", KotlinPlatformType.androidJvm) {
-                    project.configureKotlinCompilation(it, extension, t, useOutput = true)
+            kotlin.targets.matching {
+                it.platformType == KotlinPlatformType.jvm || it.platformType == KotlinPlatformType.androidJvm
+            }.all { target ->
+                if (target.platformType == KotlinPlatformType.jvm) {
+                    target.compilations.matching { it.name == "main" }.all {
+                        project.configureKotlinCompilation(it, extension, target)
+                    }
+                } else if (target.platformType == KotlinPlatformType.androidJvm) {
+                    target.compilations.matching { it.name == "release" }.all {
+                        project.configureKotlinCompilation(it, extension, target, useOutput = true)
+                    }
                 }
             }
         }
     }
-
-    private fun KotlinTarget.doForCompilations(
-        name: String,
-        type: KotlinPlatformType,
-        block: (KotlinCompilation<KotlinCommonOptions>) -> Unit
-                                              ) {
-        if (platformType != type) return
-        compilations.matching { it.name == name }.all { block(it) }
-    }
-
-    private fun multiplatformJvmCompilations(kotlin: KotlinMultiplatformExtension) =
-        kotlin.targets.matching {
-            it.platformType == KotlinPlatformType.jvm || it.platformType == KotlinPlatformType.androidJvm
-        }
 }
 
 fun KotlinTarget?.apiTaskName(suffix: String) = when (this?.name) {
@@ -192,8 +180,7 @@ private fun Project.configureCheckTasks(
 inline fun <reified T : Task> Project.task(
     name: String,
     noinline configuration: T.() -> Unit
-): TaskProvider<T> =
-    tasks.register(name, T::class.java, Action(configuration))
+): TaskProvider<T> = tasks.register(name, T::class.java, Action(configuration))
 
 inline fun <reified T : Task> Project.task(
     name: String,
