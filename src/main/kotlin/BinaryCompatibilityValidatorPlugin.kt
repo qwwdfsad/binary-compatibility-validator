@@ -11,6 +11,7 @@ import org.gradle.api.tasks.*
 import org.jetbrains.kotlin.gradle.dsl.*
 import org.jetbrains.kotlin.gradle.plugin.*
 import java.io.*
+import java.net.URLClassLoader
 
 const val API_DIR = "api"
 
@@ -58,16 +59,28 @@ class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
         project.pluginManager.withPlugin("kotlin-multiplatform") {
             if (project.name in extension.ignoredProjects) return@withPlugin
             val kotlin = project.extensions.getByName("kotlin") as KotlinMultiplatformExtension
+
+            // Create common tasks for multiplatform
+            val commonApiDump = project.tasks.register("apiDump") {
+                it.group = "other"
+                it.description = "Task that collects all target specific dump tasks"
+            }
+            val commonApiCheck = project.tasks.register("apiCheck") {
+                it.group = "verification"
+                it.description = "Shortcut task that depends on all specific check tasks"
+            }
+            project.tasks.named("check") { it.dependsOn(commonApiCheck) }
+
             kotlin.targets.matching {
                 it.platformType == KotlinPlatformType.jvm || it.platformType == KotlinPlatformType.androidJvm
             }.all { target ->
                 if (target.platformType == KotlinPlatformType.jvm) {
                     target.compilations.matching { it.name == "main" }.all {
-                        project.configureKotlinCompilation(it, extension)
+                        project.configureKotlinCompilation(it, extension, target, commonApiDump, commonApiCheck)
                     }
                 } else if (target.platformType == KotlinPlatformType.androidJvm) {
                     target.compilations.matching { it.name == "release" }.all {
-                        project.configureKotlinCompilation(it, extension, useOutput = true)
+                        project.configureKotlinCompilation(it, extension, target, commonApiDump, commonApiCheck, useOutput = true)
                     }
                 }
             }
@@ -75,14 +88,28 @@ class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
     }
 }
 
+fun KotlinTarget?.apiTaskName(suffix: String) = when (this?.name) {
+    null -> "api$suffix"
+    else  -> "${name}Api$suffix"
+}
+
+val KotlinTarget?.apiDir
+    get() = when (this?.name) {
+        null -> API_DIR
+        else -> "$API_DIR/$name"
+    }
+
 private fun Project.configureKotlinCompilation(
     compilation: KotlinCompilation<KotlinCommonOptions>,
     extension: ApiValidationExtension,
+    target: KotlinTarget? = null,
+    commonApiDump: TaskProvider<Task>? = null,
+    commonApiCheck: TaskProvider<Task>? = null,
     useOutput: Boolean = false
 ) {
     val projectName = project.name
-    val apiBuildDir = file(buildDir.resolve(API_DIR))
-    val apiBuild = task<KotlinApiBuildTask>("apiBuild", extension) {
+    val apiBuildDir = file(buildDir.resolve(target.apiDir))
+    val apiBuild = task<KotlinApiBuildTask>(target.apiTaskName("Build"), extension) {
         // Do not enable task for empty umbrella modules
         isEnabled = apiCheckEnabled(extension) && compilation.allKotlinSourceSets.any { it.kotlin.srcDirs.any { it.exists() } }
         // 'group' is not specified deliberately so it will be hidden from ./gradlew tasks
@@ -98,7 +125,7 @@ private fun Project.configureKotlinCompilation(
         }
         outputApiDir = apiBuildDir
     }
-    configureCheckTasks(apiBuildDir, apiBuild, extension)
+    configureCheckTasks(apiBuildDir, apiBuild, extension, target, commonApiDump, commonApiCheck)
 }
 
 val Project.sourceSets: SourceSetContainer
@@ -107,10 +134,14 @@ val Project.sourceSets: SourceSetContainer
 fun Project.apiCheckEnabled(extension: ApiValidationExtension): Boolean =
     name !in extension.ignoredProjects && !extension.validationDisabled
 
-private fun Project.configureApiTasks(sourceSet: SourceSet, extension: ApiValidationExtension) {
+private fun Project.configureApiTasks(
+    sourceSet: SourceSet,
+    extension: ApiValidationExtension,
+    target: KotlinTarget? = null
+) {
     val projectName = project.name
-    val apiBuildDir = file(buildDir.resolve(API_DIR))
-    val apiBuild = task<KotlinApiBuildTask>("apiBuild", extension) {
+    val apiBuildDir = file(buildDir.resolve(target.apiDir))
+    val apiBuild = task<KotlinApiBuildTask>(target.apiTaskName("Build"), extension) {
         isEnabled = apiCheckEnabled(extension)
         // 'group' is not specified deliberately so it will be hidden from ./gradlew tasks
         description =
@@ -120,17 +151,20 @@ private fun Project.configureApiTasks(sourceSet: SourceSet, extension: ApiValida
         outputApiDir = apiBuildDir
     }
 
-    configureCheckTasks(apiBuildDir, apiBuild, extension)
+    configureCheckTasks(apiBuildDir, apiBuild, extension, target)
 }
 
 private fun Project.configureCheckTasks(
     apiBuildDir: File,
     apiBuild: TaskProvider<KotlinApiBuildTask>,
-    extension: ApiValidationExtension
+    extension: ApiValidationExtension,
+    target: KotlinTarget? = null,
+    commonApiDump: TaskProvider<Task>? = null,
+    commonApiCheck: TaskProvider<Task>? = null
 ) {
     val projectName = project.name
-    val apiCheckDir = file(projectDir.resolve(API_DIR))
-    val apiCheck = task<ApiCompareCompareTask>("apiCheck") {
+    val apiCheckDir = file(projectDir.resolve(target.apiDir))
+    val apiCheck = task<ApiCompareCompareTask>(target.apiTaskName("Check")) {
         isEnabled = apiCheckEnabled(extension) && apiBuild.map { it.enabled }.getOrElse(true)
         group = "verification"
         description = "Checks signatures of public API against the golden value in API folder for $projectName"
@@ -144,10 +178,10 @@ private fun Project.configureCheckTasks(
         dependsOn(apiBuild)
     }
 
-    task<Sync>("apiDump") {
+    val apiDump = task<Sync>(target.apiTaskName("Dump")) {
         isEnabled = apiCheckEnabled(extension) && apiBuild.map { it.enabled }.getOrElse(true)
         group = "other"
-        description = "Syncs API from build dir to $API_DIR dir for $projectName"
+        description = "Syncs API from build dir to ${target.apiDir} dir for $projectName"
         from(apiBuildDir)
         into(apiCheckDir)
         dependsOn(apiBuild)
@@ -155,7 +189,13 @@ private fun Project.configureCheckTasks(
             apiCheckDir.mkdirs()
         }
     }
-    project.tasks.getByName("check").dependsOn(apiCheck)
+
+    commonApiDump?.configure { it.dependsOn(apiDump) }
+
+    when (commonApiCheck) {
+        null -> project.tasks.getByName("check").dependsOn(apiCheck)
+        else -> commonApiCheck.configure { it.dependsOn(apiCheck) }
+    }
 }
 
 inline fun <reified T : Task> Project.task(
