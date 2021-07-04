@@ -39,7 +39,6 @@ internal class MultipleJvmTargetsTest : BaseKotlinGradleTest() {
             createProjectHierarchyWithPluginOnRoot()
             runner {
                 arguments.add(":apiCheck")
-                arguments.add(":anotherJvmApiCheck")
             }
 
             dir("api/jvm/") {
@@ -67,6 +66,7 @@ internal class MultipleJvmTargetsTest : BaseKotlinGradleTest() {
 
         runner.build().apply {
             assertTaskSuccess(":apiCheck")
+            assertTaskSuccess(":jvmApiCheck")
             assertTaskSuccess(":anotherJvmApiCheck")
         }
     }
@@ -78,7 +78,6 @@ internal class MultipleJvmTargetsTest : BaseKotlinGradleTest() {
             runner {
                 arguments.add("--continue")
                 arguments.add(":check")
-//                arguments.add(":anotherJvmApiCheck")
             }
 
             dir("api/jvm/") {
@@ -105,7 +104,8 @@ internal class MultipleJvmTargetsTest : BaseKotlinGradleTest() {
         }.addClasspathFromPlugin()
 
         runner.buildAndFail().apply {
-            assertTaskFailure(":apiCheck")
+            assertTaskNotRun(":apiCheck")
+            assertTaskFailure(":jvmApiCheck")
             assertTaskFailure(":anotherJvmApiCheck")
             assertThat(output).contains("API check failed for project testproject")
             assertTaskNotRun(":check")
@@ -119,7 +119,6 @@ internal class MultipleJvmTargetsTest : BaseKotlinGradleTest() {
 
             runner {
                 arguments.add(":apiDump")
-                arguments.add(":anotherJvmApiDump")
             }
 
             dir("src/jvmMain/kotlin") {}
@@ -133,6 +132,7 @@ internal class MultipleJvmTargetsTest : BaseKotlinGradleTest() {
         }.addClasspathFromPlugin()
         runner.build().apply {
             assertTaskSuccess(":apiDump")
+            assertTaskSuccess(":jvmApiDump")
             assertTaskSuccess(":anotherJvmApiDump")
 
             val anotherExpectedApi = readFileList("examples/classes/Subsub1Class.dump")
