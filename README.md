@@ -5,6 +5,8 @@
 
 The tool allows to dump binary API of a Kotlin library that is public in sense of Kotlin visibilities and ensures that the public binary API wasn't changed in a way that make this change binary incompatible.
 
+Currently, only the JVM, includes commonMain, API is supported.
+
 ## Contents
 
 * [Setup](#setup)
@@ -201,6 +203,7 @@ For a class member a binary incompatible change is:
  - changing its name
  - changing its descriptor (erased return type and parameter types for methods);
    this includes changing field to method and vice versa
+ - changing the nullability of its return type and parameters types for methods
  - changing one of the following access flags:
     - `ACC_PUBLIC`, `ACC_PROTECTED`, `ACC_PRIVATE` — lessening the member visibility
     - `ACC_FINAL` — making non-final field or method final
