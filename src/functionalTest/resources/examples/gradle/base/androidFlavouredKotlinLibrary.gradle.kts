@@ -2,6 +2,7 @@
  * Copyright 2016-2022 JetBrains s.r.o.
  * Use of this source code is governed by the Apache 2.0 License that can be found in the LICENSE.txt file.
  */
+import org.jetbrains.kotlin.gradle.plugin.*
 plugins {
     id("com.android.library")
     id("kotlin-android")
@@ -32,8 +33,21 @@ android {
         }
     }
 
+    flavorDimensions += "brand"
+    productFlavors {
+        create("green") {
+            dimension = "brand"
+        }
+        create("red") {
+            dimension = "brand"
+        }
+    }
 }
 
+apiValidation {
+    testedFlavourName = "green"
+    additionalSourceSets.add("green")
+}
 dependencies {
     // no dependencies required
 }

@@ -64,4 +64,10 @@ public open class ApiValidationExtension {
      * By default, only the `main` source set is checked.
      */
     public var additionalSourceSets: MutableSet<String> = HashSet()
+
+    /**
+     * In Android projects with multiple flavour,
+     * it specifies the flavour you want to test (assuming projects have same API)
+     */
+    public var testedFlavourName: String? = null
 }

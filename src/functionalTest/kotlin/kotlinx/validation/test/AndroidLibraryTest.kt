@@ -11,7 +11,6 @@ import org.junit.Ignore
 import org.junit.Test
 import java.io.File
 
-@Ignore // Leftovers after revert of #94
 internal class AndroidLibraryTest : BaseKotlinGradleTest() {
 
     // region Kotlin Android Library
@@ -47,8 +46,42 @@ internal class AndroidLibraryTest : BaseKotlinGradleTest() {
 
     //endregion
 
+    // region Kotlin Flavoured Android Library
+
+    @Test
+    fun `Given a Kotlin Flavoured Android Library, when api is dumped, then task should be successful`() {
+        assumeHasAndroid()
+        val runner = test {
+            createProjectWithSubModulesAndFlavour()
+            runner {
+                arguments.add(":kotlin-library:apiDump")
+                arguments.add("--full-stacktrace")
+            }
+        }
+
+        runner.build().apply {
+            assertTaskSuccess(":kotlin-library:apiDump")
+        }
+    }
+
+    @Test
+    fun `Given a Kotlin Flavoured Android Library, when api is checked, then it should match the expected`() {
+        assumeHasAndroid()
+        test {
+            createProjectWithSubModulesAndFlavour()
+            runner {
+                arguments.add(":kotlin-library:apiCheck")
+            }
+        }.build().apply {
+            assertTaskSuccess(":kotlin-library:apiCheck")
+        }
+    }
+
+    //endregion
+
     //region Java Android Library
 
+    @Ignore // Leftovers after revert of #94
     @Test
     fun `Given a Java Android Library, when api is dumped, then task should be successful`() {
         assumeHasAndroid()
@@ -65,6 +98,7 @@ internal class AndroidLibraryTest : BaseKotlinGradleTest() {
         }
     }
 
+    @Ignore // Leftovers after revert of #94
     @Test
     fun `Given a Java Android Library, when api is checked, then it should match the expected`() {
         assumeHasAndroid()
@@ -113,6 +147,43 @@ internal class AndroidLibraryTest : BaseKotlinGradleTest() {
             }
             apiFile(projectName = "java-library") {
                 resolve("/examples/classes/JavaLib.dump")
+            }
+        }
+    }
+
+    private fun BaseKotlinScope.createProjectWithSubModulesAndFlavour() {
+        settingsGradleKts {
+            resolve("examples/gradle/settings/settings-android-project.gradle.kts")
+        }
+        buildGradleKts {
+            resolve("examples/gradle/base/androidProjectRoot.gradle.kts")
+        }
+        initLocalProperties()
+
+        dir("kotlin-library") {
+            buildGradleKts {
+                resolve("examples/gradle/base/androidFlavouredKotlinLibrary.gradle.kts")
+            }
+            kotlin("KotlinLib.kt") {
+                resolve("examples/classes/KotlinLib.kt")
+            }
+            // different files in different folder only selected flavour should be picked
+            // unfortunately files in flavour folder are not picked up
+            kotlin("FlavourGreen.kt", sourceSet = "green") {
+                resolve("examples/classes/FlavourGreen.kt")
+            }
+            kotlin("FlavourRed.kt", sourceSet = "red") {
+                resolve("examples/classes/FlavourRed.kt")
+            }
+            // same file in different folder should not create problems
+            kotlin("KotlinLib2.kt", sourceSet = "green") {
+                resolve("examples/classes/KotlinFlavour.kt")
+            }
+            kotlin("KotlinLib2.kt", sourceSet = "red") {
+                resolve("examples/classes/KotlinFlavour.kt")
+            }
+            apiFile(projectName = "kotlin-library") {
+                resolve("examples/classes/KotlinFlavouredLib.dump")
             }
         }
     }

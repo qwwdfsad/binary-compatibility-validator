@@ -5,13 +5,22 @@
 
 package kotlinx.validation
 
-import org.gradle.api.*
-import org.gradle.api.plugins.*
-import org.gradle.api.provider.*
-import org.gradle.api.tasks.*
-import org.jetbrains.kotlin.gradle.dsl.*
-import org.jetbrains.kotlin.gradle.plugin.*
-import java.io.*
+import java.io.File
+import org.gradle.api.Action
+import org.gradle.api.Plugin
+import org.gradle.api.Project
+import org.gradle.api.Task
+import org.gradle.api.plugins.AppliedPlugin
+import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.SourceSet
+import org.gradle.api.tasks.SourceSetContainer
+import org.gradle.api.tasks.Sync
+import org.gradle.api.tasks.TaskProvider
+import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
+import org.jetbrains.kotlin.gradle.dsl.KotlinCommonOptions
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 
 private const val API_DIR = "api" // Mirrored in functional tests
 
@@ -120,7 +129,15 @@ public class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
         val androidExtension = project.extensions
             .getByName("kotlin") as KotlinAndroidProjectExtension
         androidExtension.target.compilations.matching {
-            it.compilationName == "release"
+            val testedFlavourName = extension.testedFlavourName
+            if (testedFlavourName == null) {
+                it.compilationName == "release"
+            } else {
+                it.compilationName.contains("release", ignoreCase = true)
+                    && it.compilationName.contains("test", ignoreCase = true).not()
+                    && it.compilationName.contains(testedFlavourName, ignoreCase = true)
+            }
+
         }.all {
             project.configureKotlinCompilation(it, extension, useOutput = true)
         }
