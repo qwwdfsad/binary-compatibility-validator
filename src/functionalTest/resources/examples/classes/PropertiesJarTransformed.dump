@@ -5,4 +5,3 @@ public final class foo/ClassWithProperties {
 	public final fun setBar1 (I)V
 	public final fun setBar2 (I)V
 }
-

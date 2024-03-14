@@ -9,4 +9,3 @@ public final class org/jetbrains/kotlinx/android/java/library/BuildConfig {
 	public static final field LIBRARY_PACKAGE_NAME Ljava/lang/String;
 	public fun <init> ()V
 }
-

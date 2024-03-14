@@ -46,4 +46,3 @@ public final class cases/special/JvmNamesKt {
 	public static final fun publicVarGetter ()I
 	public static final fun publicVarSetter (I)V
 }
-

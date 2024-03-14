@@ -3,4 +3,3 @@ public final class com/company/BuildCon {
 	public final fun f1 ()I
 	public final fun getP1 ()I
 }
-

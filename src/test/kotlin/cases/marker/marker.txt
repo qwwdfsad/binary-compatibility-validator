@@ -10,4 +10,3 @@ public abstract interface annotation class cases/marker/HiddenMethod : java/lang
 
 public abstract interface annotation class cases/marker/HiddenProperty : java/lang/annotation/Annotation {
 }
-

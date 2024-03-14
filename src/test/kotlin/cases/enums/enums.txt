@@ -18,4 +18,3 @@ public final class cases/enums/JavaEnum : java/lang/Enum {
 	public static fun valueOf (Ljava/lang/String;)Lcases/enums/JavaEnum;
 	public static fun values ()[Lcases/enums/JavaEnum;
 }
-

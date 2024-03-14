@@ -20,4 +20,3 @@ public final class foo/api/ClassInPublicPackage {
 public final class foo/api/ClassInPublicPackage$Inner {
 	public fun <init> ()V
 }
-

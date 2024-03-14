@@ -83,4 +83,3 @@ protected abstract interface class cases/nestedClasses/PublicOpenClass$NestedPro
 protected final class cases/nestedClasses/PublicOpenClass$ObjProtected {
 	public static final field INSTANCE Lcases/nestedClasses/PublicOpenClass$ObjProtected;
 }
-

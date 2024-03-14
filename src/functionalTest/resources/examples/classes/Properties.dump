@@ -7,4 +7,3 @@ public abstract interface annotation class foo/HiddenField : java/lang/annotatio
 
 public abstract interface annotation class foo/HiddenProperty : java/lang/annotation/Annotation {
 }
-

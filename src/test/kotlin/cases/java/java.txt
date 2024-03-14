@@ -3,4 +3,3 @@ public class cases/java/Facade {
 	public static fun publicMethod (I)V
 	public static fun publicMethod (Ljava/lang/String;)V
 }
-

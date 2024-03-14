@@ -31,4 +31,3 @@ public final class cases/whenMappings/SealedClassWhenKt {
 	public static final fun deacronimize (Lcases/whenMappings/SampleSealed;)Ljava/lang/String;
 	public static final fun switch (Lcases/whenMappings/SampleSealed;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;)V
 }
-

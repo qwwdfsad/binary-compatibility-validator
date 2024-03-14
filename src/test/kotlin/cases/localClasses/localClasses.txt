@@ -15,4 +15,3 @@ public final class cases/localClasses/L {
 public final class cases/localClasses/LambdasKt {
 	public static final fun box ()V
 }
-

@@ -13,4 +13,3 @@ public final class cases/internal/PublicClassInternalCompanionWithNameShadowing 
 public final class cases/internal/PublicClassNamedInternalCompanion {
 	public fun <init> ()V
 }
-

@@ -113,4 +113,3 @@ public final class cases/companions/PublishedApiClasses$PublishedApiCompanion {
 
 public final class cases/companions/PublishedApiClasses$PublishedApiCompanion$Companion {
 }
-

@@ -5,4 +5,3 @@ public final class cases/packageAnnotations/b/b/ShouldRemainPublic {
 public final class cases/packageAnnotations/b/c/ShouldNotBeRemoved {
 	public fun <init> ()V
 }
-

@@ -9,4 +9,3 @@ public final class cases/inline/InternalClassExposed {
 	public final fun getPropertyExposed ()Ljava/lang/String;
 	public final fun setPropertyExposed (Ljava/lang/String;)V
 }
-

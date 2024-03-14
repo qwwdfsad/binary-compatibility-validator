@@ -27,8 +27,10 @@ internal fun BaseKotlinGradleTest.test(
                 createNewFile()
             }
 
-        scope.files.forEach {
+        scope.files.forEachIndexed { index, it ->
             val fileContent = readFileList(it)
+
+            if (index > 0) fileWriteTo.appendText("\n")
             fileWriteTo.appendText(fileContent)
         }
     }

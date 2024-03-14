@@ -132,7 +132,7 @@ internal class DefaultConfigTests : BaseKotlinGradleTest() {
 
         runner.buildAndFail().apply {
             val dumpOutput =
-                    "  @@ -1,1 +1,7 @@\n" +
+                    "  @@ -1,1 +1,6 @@\n" +
                             "  +public final class com/company/BuildConfig {\n" +
                             "  +\tpublic fun <init> ()V\n" +
                             "  +\tpublic final fun function ()I\n" +
