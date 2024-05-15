@@ -5,17 +5,20 @@
 
 package kotlinx.validation
 
-import com.github.difflib.DiffUtils
-import com.github.difflib.UnifiedDiffUtils
-import java.io.*
-import java.util.TreeMap
-import javax.inject.Inject
+import com.github.difflib.*
 import org.gradle.api.*
 import org.gradle.api.file.*
-import org.gradle.api.model.ObjectFactory
+import org.gradle.api.model.*
 import org.gradle.api.tasks.*
+import org.gradle.api.tasks.Optional
+import java.io.*
+import java.util.*
+import javax.inject.*
 
 public open class KotlinApiCompareTask @Inject constructor(private val objects: ObjectFactory): DefaultTask() {
+
+    @Input
+    public var incremental: Boolean = false
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
@@ -25,7 +28,6 @@ public open class KotlinApiCompareTask @Inject constructor(private val objects: 
     public lateinit var generatedApiFile: File
 
     private val projectName = project.name
-
     private val rootDir = project.rootProject.rootDir
 
     @TaskAction
@@ -40,6 +42,10 @@ public open class KotlinApiCompareTask @Inject constructor(private val objects: 
             error("Expected folder with generate API declarations '$buildApiDir' does not exist.")
         }
         val subject = projectName
+        val verification = when {
+            incremental -> IncrementalVerification(projectName, logger)
+            else -> VerificationStrict(projectName)
+        }
 
         /*
          * We use case-insensitive comparison to workaround issues with case-insensitive OSes
@@ -79,10 +85,7 @@ public open class KotlinApiCompareTask @Inject constructor(private val objects: 
         val actualFile = actualApiDeclaration.getFile(buildApiDir)
         val diff = compareFiles(expectedFile, actualFile)
         if (diff != null) diffSet.add(diff)
-        if (diffSet.isNotEmpty()) {
-            val diffText = diffSet.joinToString("\n\n")
-            error("API check failed for project $subject.\n$diffText\n\n You can run :$subject:apiDump task to overwrite API declarations")
-        }
+        verification.verify(diffSet)
     }
 
     private fun File.relativeDirPath(): String {

@@ -16,6 +16,12 @@ public open class ApiValidationExtension {
     public var validationDisabled: Boolean = false
 
     /**
+     * Replaces hard errors during validation with warnings if only additions have been made since the last public API
+     * snapshot. This can prove useful when publishing incremental API changes without additional human interaction.
+     */
+    public var useIncrementalValidation: Boolean = false
+
+    /**
      * Fully qualified package names that are not consider public API.
      * For example, it could be `kotlinx.coroutines.internal` or `kotlinx.serialization.implementation`.
      */
@@ -39,17 +45,17 @@ public open class ApiValidationExtension {
     public var ignoredClasses: MutableSet<String> = HashSet()
 
     /**
-     * Fully qualified names of annotations that can be used to explicitly mark public declarations. 
+     * Fully qualified names of annotations that can be used to explicitly mark public declarations.
      * If at least one of [publicMarkers], [publicPackages] or [publicClasses] is defined,
-     * all declarations not covered by any of them will be considered non-public. 
+     * all declarations not covered by any of them will be considered non-public.
      * [ignoredPackages], [ignoredClasses] and [nonPublicMarkers] can be used for additional filtering.
      */
     public var publicMarkers: MutableSet<String> = HashSet()
 
     /**
-     * Fully qualified package names that contain public declarations. 
+     * Fully qualified package names that contain public declarations.
      * If at least one of [publicMarkers], [publicPackages] or [publicClasses] is defined,
-     * all declarations not covered by any of them will be considered non-public. 
+     * all declarations not covered by any of them will be considered non-public.
      * [ignoredPackages], [ignoredClasses] and [nonPublicMarkers] can be used for additional filtering.
      */
     public var publicPackages: MutableSet<String> = HashSet()

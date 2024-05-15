@@ -1,0 +1,16 @@
+public final class foo/Incremental {
+	public fun <init> (Ljava/lang/Object;)V
+	public final fun component1 ()Ljava/lang/Object;
+	public final fun copy (Ljava/lang/Object;)Lfoo/Incremental;
+	public static synthetic fun copy$default (Lfoo/Incremental;Ljava/lang/Object;ILjava/lang/Object;)Lfoo/Incremental;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getId ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public final fun integer ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class foo/IncrementalBaseKt {
+	public static final fun getId ()Ljava/lang/Object;
+	public static final fun sum ([I)I
+}
