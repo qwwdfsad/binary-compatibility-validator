@@ -14,6 +14,7 @@ import kotlinx.validation.api.runner
 import kotlinx.validation.api.test
 import org.assertj.core.api.Assertions
 import org.junit.Test
+import kotlin.test.assertContains
 import kotlin.test.assertTrue
 
 internal class SubprojectsWithPluginOnRootTests : BaseKotlinGradleTest() {
@@ -315,6 +316,41 @@ internal class SubprojectsWithPluginOnRootTests : BaseKotlinGradleTest() {
             val apiSub2 = rootProjectDir.resolve("sub2/$API_DIR/sub2.api")
             assertTrue(apiSub2.exists(), "api dump file ${apiSub2.path} should exist")
             Assertions.assertThat(apiSub2.readText()).isEqualToIgnoringNewLines("")
+        }
+    }
+
+    /**
+     * https://github.com/Kotlin/binary-compatibility-validator/issues/257
+     */
+    @Test
+    fun `using project name instead of path should not be ignored`() {
+        val runner = test {
+            createProjectHierarchyWithPluginOnRoot()
+            rootProjectDir.resolve("build.gradle.kts").writeText(
+                """
+                apiValidation {
+                    ignoredProjects += listOf(
+                        "subsub1"
+                    )
+                }
+                """.trimIndent()
+            )
+
+            runner {
+                arguments.add(":apiCheck")
+            }
+        }
+
+        try {
+            runner.build()
+            error("Should have failed.")
+        } catch (t: Throwable) {
+            assertContains(
+                t.stackTraceToString(),
+                """
+                    Cannot find excluded project subsub1 in all projects: [:, :sub1, :sub2, :sub1:subsub1, :sub1:subsub2]
+                """.trimIndent()
+            )
         }
     }
 }

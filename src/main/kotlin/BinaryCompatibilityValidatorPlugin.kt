@@ -17,7 +17,6 @@ import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.konan.target.HostManager
 import org.jetbrains.kotlin.library.abi.ExperimentalLibraryAbiReader
-import org.jetbrains.kotlin.library.abi.LibraryAbiReader
 import java.io.*
 import java.util.*
 
@@ -35,7 +34,7 @@ public class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
     private fun Project.validateExtension(extension: ApiValidationExtension) {
         afterEvaluate {
             val ignored = extension.ignoredProjects
-            val all = allprojects.map { it.name }
+            val all = allprojects.map { it.path }
             for (project in ignored) {
                 require(project in all) { "Cannot find excluded project $project in all projects: $all" }
             }
@@ -55,7 +54,7 @@ public class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
         extension: ApiValidationExtension,
         action: Action<AppliedPlugin>
     ) = project.pluginManager.withPlugin(name) {
-        if (project.name in extension.ignoredProjects) return@withPlugin
+        if (project.path in extension.ignoredProjects) return@withPlugin
         action.execute(it)
     }
 
@@ -64,7 +63,7 @@ public class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
         extension: ApiValidationExtension,
         jvmRuntimeClasspath: NamedDomainObjectProvider<Configuration>
     ) = configurePlugin("kotlin-multiplatform", project, extension) {
-        if (project.name in extension.ignoredProjects) return@configurePlugin
+        if (project.path in extension.ignoredProjects) return@configurePlugin
         val kotlin = project.kotlinMultiplatform
 
         // Create common tasks for multiplatform
@@ -208,16 +207,16 @@ private fun Project.configureKotlinCompilation(
     commonApiCheck: TaskProvider<Task>? = null,
     useOutput: Boolean = false,
 ) {
-    val projectName = project.name
+    val projectPath = project.path
     val dumpFileName = project.jvmDumpFileName
     val apiDirProvider = targetConfig.apiDir
     val apiBuildDir = apiDirProvider.flatMap { f -> layout.buildDirectory.asFile.map { it.resolve(f) } }
 
     val apiBuild = task<KotlinApiBuildTask>(targetConfig.apiTaskName("Build")) {
-        isEnabled = apiCheckEnabled(projectName, extension)
+        isEnabled = apiCheckEnabled(projectPath, extension)
         // 'group' is not specified deliberately, so it will be hidden from ./gradlew tasks
         description =
-            "Builds Kotlin API for 'main' compilations of $projectName. Complementary task and shouldn't be called manually"
+            "Builds Kotlin API for 'main' compilations of $projectPath. Complementary task and shouldn't be called manually"
         if (useOutput) {
             // Workaround for #4
             inputClassesDirs.from(compilation.output.classesDirs)
@@ -240,19 +239,19 @@ internal val Project.apiValidationExtensionOrNull: ApiValidationExtension?
             .map { it.extensions.findByType(ApiValidationExtension::class.java) }
             .firstOrNull { it != null }
 
-private fun apiCheckEnabled(projectName: String, extension: ApiValidationExtension): Boolean =
-    projectName !in extension.ignoredProjects && !extension.validationDisabled
+private fun apiCheckEnabled(projectPath: String, extension: ApiValidationExtension): Boolean =
+    projectPath !in extension.ignoredProjects && !extension.validationDisabled
 
 @OptIn(ExperimentalBCVApi::class)
-private fun klibAbiCheckEnabled(projectName: String, extension: ApiValidationExtension): Boolean =
-    projectName !in extension.ignoredProjects && !extension.validationDisabled && extension.klib.enabled
+private fun klibAbiCheckEnabled(projectPath: String, extension: ApiValidationExtension): Boolean =
+    projectPath !in extension.ignoredProjects && !extension.validationDisabled && extension.klib.enabled
 
 private fun Project.configureApiTasks(
     extension: ApiValidationExtension,
     targetConfig: TargetConfig = TargetConfig(this, extension),
     jvmRuntimeClasspath: NamedDomainObjectProvider<Configuration>,
 ) {
-    val projectName = project.name
+    val projectPath = project.path
     val dumpFileName = project.jvmDumpFileName
     val apiBuildDir = targetConfig.apiDir.flatMap { f -> layout.buildDirectory.asFile.map { it.resolve(f) } }
     val sourceSetsOutputsProvider = project.provider {
@@ -262,10 +261,10 @@ private fun Project.configureApiTasks(
     }
 
     val apiBuild = task<KotlinApiBuildTask>(targetConfig.apiTaskName("Build")) {
-        isEnabled = apiCheckEnabled(projectName, extension)
+        isEnabled = apiCheckEnabled(projectPath, extension)
         // 'group' is not specified deliberately, so it will be hidden from ./gradlew tasks
         description =
-            "Builds Kotlin API for 'main' compilations of $projectName. Complementary task and shouldn't be called manually"
+            "Builds Kotlin API for 'main' compilations of $projectPath. Complementary task and shouldn't be called manually"
         inputClassesDirs.from(sourceSetsOutputsProvider)
         outputApiFile.fileProvider(apiBuildDir.map { it.resolve(dumpFileName) })
         runtimeClasspath.from(jvmRuntimeClasspath)
@@ -281,25 +280,25 @@ private fun Project.configureCheckTasks(
     commonApiDump: TaskProvider<Task>? = null,
     commonApiCheck: TaskProvider<Task>? = null,
 ) {
-    val projectName = project.name
+    val projectPath = project.path
     val apiCheckDir = targetConfig.apiDir.map {
         projectDir.resolve(it).also { r ->
             logger.debug("Configuring api for ${targetConfig.targetName ?: "jvm"} to $r")
         }
     }
     val apiCheck = task<KotlinApiCompareTask>(targetConfig.apiTaskName("Check")) {
-        isEnabled = apiCheckEnabled(projectName, extension) && apiBuild.map { it.enabled }.getOrElse(true)
+        isEnabled = apiCheckEnabled(projectPath, extension) && apiBuild.map { it.enabled }.getOrElse(true)
         group = "verification"
-        description = "Checks signatures of public API against the golden value in API folder for $projectName"
+        description = "Checks signatures of public API against the golden value in API folder for $projectPath"
         projectApiFile.fileProvider(apiCheckDir.map { it.resolve(jvmDumpFileName) })
         generatedApiFile.set(apiBuild.flatMap { it.outputApiFile })
     }
 
     val dumpFileName = project.jvmDumpFileName
     val apiDump = task<SyncFile>(targetConfig.apiTaskName("Dump")) {
-        isEnabled = apiCheckEnabled(projectName, extension) && apiBuild.map { it.enabled }.getOrElse(true)
+        isEnabled = apiCheckEnabled(projectPath, extension) && apiBuild.map { it.enabled }.getOrElse(true)
         group = "other"
-        description = "Syncs the API file for $projectName"
+        description = "Syncs the API file for $projectPath"
         from.set(apiBuild.flatMap { it.outputApiFile })
         to.fileProvider(apiCheckDir.map { it.resolve(dumpFileName) })
     }
@@ -398,16 +397,16 @@ private class KlibValidationPipelineBuilder(
 
     private fun Project.checkKlibsTask(klibDumpConfig: TargetConfig) =
         project.task<KotlinApiCompareTask>(klibDumpConfig.apiTaskName("Check")) {
-            isEnabled = klibAbiCheckEnabled(project.name, extension)
+            isEnabled = klibAbiCheckEnabled(project.path, extension)
             group = "verification"
             description =
-                "Checks signatures of a public KLib ABI against the golden value in ABI folder for ${project.name}"
+                "Checks signatures of a public KLib ABI against the golden value in ABI folder for ${project.path}"
         }
 
     private fun Project.dumpKlibsTask(klibDumpConfig: TargetConfig) =
         project.task<SyncFile>(klibDumpConfig.apiTaskName("Dump")) {
-            isEnabled = klibAbiCheckEnabled(project.name, extension)
-            description = "Syncs the KLib ABI file for ${project.name}"
+            isEnabled = klibAbiCheckEnabled(project.path, extension)
+            description = "Syncs the KLib ABI file for ${project.path}"
             group = "other"
             onlyIf {
                 it as SyncFile
@@ -424,7 +423,7 @@ private class KlibValidationPipelineBuilder(
         klibDumpConfig.apiTaskName("ExtractForValidation")
     )
     {
-        isEnabled = klibAbiCheckEnabled(project.name, extension)
+        isEnabled = klibAbiCheckEnabled(project.path, extension)
         description = "Prepare a reference KLib ABI file by removing all unsupported targets from " +
                 "the golden file stored in the project"
         group = "other"
@@ -443,7 +442,7 @@ private class KlibValidationPipelineBuilder(
         klibDumpConfig.apiTaskName("MergeInferred")
     )
     {
-        isEnabled = klibAbiCheckEnabled(project.name, extension)
+        isEnabled = klibAbiCheckEnabled(project.path, extension)
         description = "Merges multiple KLib ABI dump files generated for " +
                 "different targets (including inferred dumps for unsupported targets) " +
                 "into a single merged KLib ABI dump"
@@ -456,7 +455,7 @@ private class KlibValidationPipelineBuilder(
         klibMergeDir: Provider<File>,
         runtimeClasspath: NamedDomainObjectProvider<Configuration>
     ) = project.task<KotlinKlibMergeAbiTask>(klibDumpConfig.apiTaskName("Merge")) {
-        isEnabled = klibAbiCheckEnabled(project.name, extension)
+        isEnabled = klibAbiCheckEnabled(project.path, extension)
         description = "Merges multiple KLib ABI dump files generated for " +
                 "different targets into a single merged KLib ABI dump"
         mergedApiFile.fileProvider(klibMergeDir.map { it.resolve(klibDumpFileName) })
@@ -577,11 +576,11 @@ private class KlibValidationPipelineBuilder(
         apiBuildDir: Provider<File>,
         runtimeClasspath: NamedDomainObjectProvider<Configuration>
     ): TaskProvider<KotlinKlibAbiBuildTask> {
-        val projectName = project.name
+        val projectPath = project.path
         val buildTask = project.task<KotlinKlibAbiBuildTask>(targetConfig.apiTaskName("Build")) {
-            isEnabled = klibAbiCheckEnabled(projectName, extension)
+            isEnabled = klibAbiCheckEnabled(projectPath, extension)
             // 'group' is not specified deliberately, so it will be hidden from ./gradlew tasks
-            description = "Builds Kotlin KLib ABI dump for 'main' compilations of $projectName. " +
+            description = "Builds Kotlin KLib ABI dump for 'main' compilations of $projectPath. " +
                     "Complementary task and shouldn't be called manually"
             this.target.set(target)
             klibFile.from(compilation.output.classesDirs)
@@ -594,7 +593,7 @@ private class KlibValidationPipelineBuilder(
 
     private fun Project.mergeDependencyForUnsupportedTarget(targetConfig: TargetConfig): TaskProvider<DefaultTask> {
         return project.task<DefaultTask>(targetConfig.apiTaskName("Build")) {
-            isEnabled = apiCheckEnabled(project.name, extension)
+            isEnabled = apiCheckEnabled(project.path, extension)
 
             doLast {
                 logger.warn(
@@ -613,7 +612,7 @@ private class KlibValidationPipelineBuilder(
     ): TaskProvider<KotlinKlibInferAbiTask> {
         val targetName = targetConfig.targetName!!
         return project.task<KotlinKlibInferAbiTask>(targetConfig.apiTaskName("Infer")) {
-            isEnabled = klibAbiCheckEnabled(project.name, extension)
+            isEnabled = klibAbiCheckEnabled(project.path, extension)
             description = "Try to infer the dump for unsupported target $targetName using dumps " +
                     "generated for supported targets."
             group = "other"

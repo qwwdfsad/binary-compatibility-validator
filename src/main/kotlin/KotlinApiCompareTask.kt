@@ -8,7 +8,6 @@ package kotlinx.validation
 import com.github.difflib.DiffUtils
 import com.github.difflib.UnifiedDiffUtils
 import java.io.*
-import javax.inject.Inject
 import org.gradle.api.*
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.*
@@ -23,7 +22,7 @@ public open class KotlinApiCompareTask : DefaultTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     public val generatedApiFile: RegularFileProperty = project.objects.fileProperty()
 
-    private val projectName = project.name
+    private val projectPath = project.path
 
     private val rootDir = project.rootDir
 
@@ -51,10 +50,9 @@ public open class KotlinApiCompareTask : DefaultTask() {
         if (diff != null) diffSet.add(diff)
         if (diffSet.isNotEmpty()) {
             val diffText = diffSet.joinToString("\n\n")
-            val subject = projectName
             error(
-                "API check failed for project $subject.\n$diffText\n\n" +
-                        "You can run :$subject:apiDump task to overwrite API declarations"
+                "API check failed for project $projectPath.\n$diffText\n\n" +
+                        "You can run $projectPath:apiDump task to overwrite API declarations"
             )
         }
     }
