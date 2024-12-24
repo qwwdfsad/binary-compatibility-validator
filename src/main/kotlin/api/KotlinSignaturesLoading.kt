@@ -12,8 +12,8 @@ import org.objectweb.asm.tree.*
 import java.io.*
 import java.util.*
 import java.util.jar.*
+import java.util.regex.Pattern
 import kotlin.metadata.KmProperty
-import kotlin.metadata.visibility
 
 @ExternalApi
 @Suppress("unused")
@@ -280,6 +280,7 @@ public fun List<ClassBinarySignature>.extractAnnotatedPackages(targetAnnotations
 
 @ExternalApi
 public fun List<ClassBinarySignature>.filterOutNonPublic(
+    nonPublicPatterns: Collection<Pattern> = emptyList(),
     nonPublicPackages: Collection<String> = emptyList(),
     nonPublicClasses: Collection<String> = emptyList()
 ): List<ClassBinarySignature> {
@@ -287,6 +288,8 @@ public fun List<ClassBinarySignature>.filterOutNonPublic(
     val excludedClasses = nonPublicClasses.map(::toSlashSeparatedPath).toSet()
 
     val classByName = associateBy { it.name }
+
+    fun ClassBinarySignature.isNonPublic() = nonPublicPatterns.any { it.matcher(name).matches() }
 
     fun ClassBinarySignature.isPublicAndAccessible(): Boolean =
         isEffectivelyPublic &&
@@ -314,7 +317,7 @@ public fun List<ClassBinarySignature>.filterOutNonPublic(
     }
 
     return filter {
-        !it.isInPackages(nonPublicPackagePaths) && !it.isInClasses(excludedClasses) && it.isPublicAndAccessible()
+        !it.isInPackages(nonPublicPackagePaths) && !it.isInClasses(excludedClasses) && it.isPublicAndAccessible() && !it.isNonPublic()
     }
         .map { it.flattenNonPublicBases() }
         .filterNot { it.isNotUsedWhenEmpty && it.memberSignatures.isEmpty() }

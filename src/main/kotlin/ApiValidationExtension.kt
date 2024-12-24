@@ -39,6 +39,14 @@ public open class ApiValidationExtension {
     public var ignoredClasses: MutableSet<String> = HashSet()
 
     /**
+     * Defines a regex pattern used to define classes and packages that are ignored by the API check.
+     *
+     * Example of such a package could be `.+\/internal\/.+`.
+     * An example of such a class could be `.+\/BuildConfig`
+     */
+    public var ignoredPatterns: MutableSet<String> = HashSet()
+
+    /**
      * Fully qualified names of annotations that can be used to explicitly mark public declarations. 
      * If at least one of [publicMarkers], [publicPackages] or [publicClasses] is defined,
      * all declarations not covered by any of them will be considered non-public. 

@@ -10,6 +10,7 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
+import java.util.regex.Pattern
 import javax.inject.Inject
 
 public abstract class BuildTaskBase : WorkerAwareTaskBase() {
@@ -30,6 +31,18 @@ public abstract class BuildTaskBase : WorkerAwareTaskBase() {
         )
     }
 
+    private fun patternSetProperty(provider: ApiValidationExtension.() -> Set<Pattern>): SetProperty<Pattern> {
+        return project.objects.setProperty(Pattern::class.java).convention(
+            project.provider {
+                if (extension == null) {
+                    emptySet()
+                } else {
+                    provider(extension)
+                }
+            }
+        )
+    }
+
     @get:Input
     public val ignoredPackages: SetProperty<String> = stringSetProperty { ignoredPackages }
 
@@ -38,6 +51,9 @@ public abstract class BuildTaskBase : WorkerAwareTaskBase() {
 
     @get:Input
     public val ignoredClasses: SetProperty<String> = stringSetProperty { ignoredClasses }
+
+    @get:Input
+    public val ignoredPatterns: SetProperty<Pattern> = patternSetProperty { ignoredPatterns.map { Pattern.compile(it) }.toSet() }
 
     @get:Input
     public val publicPackages: SetProperty<String> = stringSetProperty { publicPackages }
@@ -55,6 +71,7 @@ public abstract class BuildTaskBase : WorkerAwareTaskBase() {
         params.ignoredPackages.set(ignoredPackages)
         params.nonPublicMarkers.set(nonPublicMarkers)
         params.ignoredClasses.set(ignoredClasses)
+        params.ignoredPatterns.set(ignoredPatterns)
         params.publicPackages.set(publicPackages)
         params.publicMarkers.set(publicMarkers)
         params.publicClasses.set(publicClasses)
@@ -65,6 +82,7 @@ internal interface BuildParametersBase : WorkParameters {
     val ignoredPackages: SetProperty<String>
     val nonPublicMarkers: SetProperty<String>
     val ignoredClasses: SetProperty<String>
+    val ignoredPatterns: SetProperty<Pattern>
     val publicPackages: SetProperty<String>
     val publicMarkers: SetProperty<String>
     val publicClasses: SetProperty<String>

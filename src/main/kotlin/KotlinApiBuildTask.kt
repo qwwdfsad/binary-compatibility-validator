@@ -10,7 +10,6 @@ import org.gradle.api.*
 import org.gradle.api.file.*
 import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.util.jar.JarFile
 import javax.inject.Inject
@@ -94,6 +93,7 @@ internal abstract class AbiBuildWorker : WorkAction<ApiBuildParameters> {
         val nonPublicMarkers = parameters.nonPublicMarkers.get()
         val ignoredClasses = parameters.ignoredClasses.get()
         val ignoredPackages = parameters.ignoredPackages.get()
+        val ignoredPattern = parameters.ignoredPatterns.get()
 
         val publicPackagesNames = signatures.extractAnnotatedPackages(publicMarkers.map(::replaceDots).toSet())
         val ignoredPackagesNames =
@@ -103,7 +103,7 @@ internal abstract class AbiBuildWorker : WorkAction<ApiBuildParameters> {
             .retainExplicitlyIncludedIfDeclared(
                 publicPackages + publicPackagesNames, publicClasses, publicMarkers
             )
-            .filterOutNonPublic(ignoredPackages + ignoredPackagesNames, ignoredClasses)
+            .filterOutNonPublic(ignoredPattern, ignoredPackages + ignoredPackagesNames, ignoredClasses)
             .filterOutAnnotated(nonPublicMarkers.map(::replaceDots).toSet())
 
         parameters.outputApiFile.asFile.get().bufferedWriter().use { writer ->

@@ -4,6 +4,7 @@ public class kotlinx/validation/ApiValidationExtension {
 	public final fun getApiDumpDirectory ()Ljava/lang/String;
 	public final fun getIgnoredClasses ()Ljava/util/Set;
 	public final fun getIgnoredPackages ()Ljava/util/Set;
+	public final fun getIgnoredPatterns ()Ljava/util/Set;
 	public final fun getIgnoredProjects ()Ljava/util/Set;
 	public final fun getKlib ()Lkotlinx/validation/KlibValidationSettings;
 	public final fun getNonPublicMarkers ()Ljava/util/Set;
@@ -16,6 +17,7 @@ public class kotlinx/validation/ApiValidationExtension {
 	public final fun setApiDumpDirectory (Ljava/lang/String;)V
 	public final fun setIgnoredClasses (Ljava/util/Set;)V
 	public final fun setIgnoredPackages (Ljava/util/Set;)V
+	public final fun setIgnoredPatterns (Ljava/util/Set;)V
 	public final fun setIgnoredProjects (Ljava/util/Set;)V
 	public final fun setNonPublicMarkers (Ljava/util/Set;)V
 	public final fun setPublicClasses (Ljava/util/Set;)V
@@ -34,6 +36,7 @@ public abstract class kotlinx/validation/BuildTaskBase : kotlinx/validation/Work
 	public fun <init> ()V
 	public final fun getIgnoredClasses ()Lorg/gradle/api/provider/SetProperty;
 	public final fun getIgnoredPackages ()Lorg/gradle/api/provider/SetProperty;
+	public final fun getIgnoredPatterns ()Lorg/gradle/api/provider/SetProperty;
 	public final fun getNonPublicMarkers ()Lorg/gradle/api/provider/SetProperty;
 	public final fun getPublicClasses ()Lorg/gradle/api/provider/SetProperty;
 	public final fun getPublicMarkers ()Lorg/gradle/api/provider/SetProperty;
@@ -133,8 +136,8 @@ public final class kotlinx/validation/api/KotlinSignaturesLoadingKt {
 	public static final fun dump (Ljava/util/List;Ljava/lang/Appendable;)Ljava/lang/Appendable;
 	public static final fun extractAnnotatedPackages (Ljava/util/List;Ljava/util/Set;)Ljava/util/List;
 	public static final fun filterOutAnnotated (Ljava/util/List;Ljava/util/Set;)Ljava/util/List;
-	public static final fun filterOutNonPublic (Ljava/util/List;Ljava/util/Collection;Ljava/util/Collection;)Ljava/util/List;
-	public static synthetic fun filterOutNonPublic$default (Ljava/util/List;Ljava/util/Collection;Ljava/util/Collection;ILjava/lang/Object;)Ljava/util/List;
+	public static final fun filterOutNonPublic (Ljava/util/List;Ljava/util/Collection;Ljava/util/Collection;Ljava/util/Collection;)Ljava/util/List;
+	public static synthetic fun filterOutNonPublic$default (Ljava/util/List;Ljava/util/Collection;Ljava/util/Collection;Ljava/util/Collection;ILjava/lang/Object;)Ljava/util/List;
 	public static final fun loadApiFromJvmClasses (Ljava/util/jar/JarFile;Lkotlin/jvm/functions/Function1;)Ljava/util/List;
 	public static final fun loadApiFromJvmClasses (Lkotlin/sequences/Sequence;Lkotlin/jvm/functions/Function1;)Ljava/util/List;
 	public static synthetic fun loadApiFromJvmClasses$default (Ljava/util/jar/JarFile;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/util/List;
