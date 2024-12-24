@@ -8,6 +8,9 @@ annotation class HiddenProperty
 
 annotation class HiddenMethod
 
+@Target(AnnotationTarget.FILE)
+annotation class HiddenByKtAnnotation
+
 public class Foo {
     // HiddenField will be on the field
     @HiddenField
