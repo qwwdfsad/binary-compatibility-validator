@@ -27,6 +27,11 @@ public open class ApiValidationExtension {
     public var ignoredProjects: MutableSet<String> = HashSet()
 
     /**
+     * Should projects specified in [ignoredProjects] also have their subprojects ignored
+     */
+    public var ignoreSubprojects: Boolean = false
+
+    /**
      * Fully qualified names of annotations that effectively exclude declarations from being public.
      * Example of such annotation could be `kotlinx.coroutines.InternalCoroutinesApi`.
      */

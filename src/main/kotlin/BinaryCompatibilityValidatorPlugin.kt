@@ -34,6 +34,17 @@ public class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
 
     private fun Project.validateExtension(extension: ApiValidationExtension) {
         afterEvaluate {
+            val ignoredSubprojects = extension.ignoredProjects
+                .flatMap { projectName ->
+                    allprojects
+                    .filter { project -> project.name == projectName }
+                    .flatMap { project -> project.subprojects.map { it.name }}}
+                .takeIf { extension.ignoreSubprojects }
+
+            ignoredSubprojects?.let {
+                extension.ignoredProjects.addAll(it)
+            }
+
             val ignored = extension.ignoredProjects
             val all = allprojects.map { it.name }
             for (project in ignored) {
