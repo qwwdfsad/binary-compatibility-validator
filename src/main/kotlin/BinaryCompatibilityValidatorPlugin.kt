@@ -464,7 +464,7 @@ private class KlibValidationPipelineBuilder(
     }
 
     fun Project.bannedTargets(): Set<String> {
-        val prop = project.properties[BANNED_TARGETS_PROPERTY_NAME] as String?
+        val prop = project.findProperty(BANNED_TARGETS_PROPERTY_NAME)?.toString()
         prop ?: return emptySet()
         return prop.split(",").map { it.trim() }.toSet().also {
             if (it.isNotEmpty()) {
